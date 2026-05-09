@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ArrowLeft, ShoppingCart, Crown, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Crown } from "lucide-react";
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
@@ -43,6 +43,8 @@ export default async function GamePage({ params }: PageProps) {
       currency: 'USD',
     }).format(price);
   };
+
+  const ROW_H = "h-[52px]";
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -90,43 +92,42 @@ export default async function GamePage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-8">
-        <div className="card-dark rounded-2xl overflow-hidden">
+      <div className="grid lg:grid-cols-2 gap-6 overflow-visible">
+        <div className="card-dark rounded-2xl overflow-hidden opacity-80">
           <div className="flex items-center gap-3 px-5 py-4 border-b border-[#1e293b]">
             <div className="w-9 h-9 rounded-lg bg-slate-700/50 flex items-center justify-center text-base shrink-0">
               😐
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="font-bold text-slate-300 text-sm">Standard Access</p>
               <p className="text-[11px] text-slate-500">Retail pricing — no discount</p>
             </div>
           </div>
 
-          <div className="px-5">
-            <div className="grid grid-cols-[1fr_6rem] py-3 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-              <span>Product</span>
-              <span className="text-right">Price</span>
-            </div>
+          <div className="grid grid-cols-[1fr_6rem] px-5 pt-3 pb-1">
+            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Product</span>
+            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest text-right">Price</span>
+          </div>
 
-            <div className="pb-4">
-              {game.products.map((product: any, i: number) => (
+          <div className="px-5 pb-4">
+            {game.products.map((product: any) => {
+              const label = `${product.name} · ${product.amount}`;
+              return (
                 <div
                   key={product.id}
-                  className="grid grid-cols-[1fr_6rem] items-center h-[52px] border-b border-[#1e293b] last:border-0"
+                  className={`grid grid-cols-[1fr_6rem] items-center ${ROW_H} border-b border-[#1e293b] last:border-0`}
                 >
-                  <span className="text-sm text-slate-400 truncate pr-2">
-                    {product.name} · {product.amount}
-                  </span>
+                  <span className="text-sm text-slate-400 truncate pr-2 min-w-0">{label}</span>
                   <span className="text-sm font-semibold text-slate-300 tabular-nums text-right">
                     {formatPrice(product.retailPrice)}
                   </span>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         </div>
 
-        <div className="relative">
+        <div className="relative overflow-visible">
           <div className="absolute -top-4 inset-x-0 flex justify-center z-20 pointer-events-none">
             <span className="vip-badge px-5 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5 tracking-wider whitespace-nowrap shadow-lg">
               <Crown className="w-3 h-3 fill-current" /> PLATINUM MEMBER
@@ -138,43 +139,44 @@ export default async function GamePage({ params }: PageProps) {
               <div className="w-9 h-9 rounded-lg bg-yellow-400/10 flex items-center justify-center shrink-0">
                 <Crown className="w-5 h-5 text-yellow-400 fill-yellow-400/30" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="font-bold text-white text-sm">Inner Circle Access</p>
                 <p className="text-[11px] text-green-400 font-medium">At-cost — 2% fee only</p>
               </div>
             </div>
 
-            <div className="px-5">
-              <div className="grid grid-cols-[1fr_6rem] py-3 text-[10px] font-bold uppercase tracking-widest">
-                <span className="text-slate-600">Product</span>
-                <span className="text-green-800 text-right">Member</span>
-              </div>
+            <div className="grid grid-cols-[1fr_6rem] px-5 pt-3 pb-1">
+              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Product</span>
+              <span className="text-[10px] font-bold text-green-800 uppercase tracking-widest text-right">Member</span>
+            </div>
 
-              <div className="pb-4">
-                {game.products.map((product: any) => {
-                  const savings = product.retailPrice - product.memberPrice;
-                  return (
-                    <div
-                      key={product.id}
-                      className="grid grid-cols-[1fr_6rem] items-center h-[52px] border-b border-green-900/30 last:border-0"
-                    >
-                      <span className="text-sm text-slate-300 truncate pr-2">
-                        {product.name} · {product.amount}
-                      </span>
-                      <div className="text-right">
-                        <div className="font-black text-green-400 tabular-nums text-sm">
-                          {formatPrice(product.memberPrice)}
-                        </div>
-                        {savings > 0.01 && (
-                          <div className="text-[10px] text-green-600 tabular-nums font-semibold">
-                            save {formatPrice(savings)}
-                          </div>
-                        )}
+            <div className="px-5 pb-4">
+              {game.products.map((product: any) => {
+                const retail = product.retailPrice;
+                const member = product.memberPrice;
+                const saveUSD = retail - member;
+                const saveAmount = formatPrice(saveUSD);
+                const label = `${product.name} · ${product.amount}`;
+
+                return (
+                  <div
+                    key={product.id}
+                    className={`grid grid-cols-[1fr_6rem] items-center ${ROW_H} border-b border-green-900/30 last:border-0`}
+                  >
+                    <span className="text-sm text-slate-300 truncate pr-2 min-w-0">{label}</span>
+                    <div className="text-right">
+                      <div className="font-black text-green-400 tabular-nums text-sm leading-tight">
+                        {formatPrice(member)}
                       </div>
+                      {saveUSD > 0.005 && (
+                        <div className="text-[10px] text-green-600 tabular-nums font-semibold leading-tight">
+                          save {saveAmount}
+                        </div>
+                      )}
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                );
+              })}
             </div>
 
             <p className="px-5 pb-4 text-[11px] text-green-700 text-center font-medium tracking-wide">

@@ -3,7 +3,9 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { SessionProvider } from "@/components/providers/SessionProvider";
+import { CurrencyProvider } from "@/components/providers/CurrencyProvider";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -28,16 +30,29 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
+  
+  let isMember = false;
+  if (session?.user?.id) {
+    const u = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        subscription: { select: { status: true } },
+      },
+    });
+    isMember = u?.subscription?.status === "active" || u?.subscription?.status === "cancelling";
+  }
 
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
         <SessionProvider session={session}>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
+          <CurrencyProvider>
+            <div className="flex flex-col min-h-screen">
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+          </CurrencyProvider>
         </SessionProvider>
       </body>
     </html>

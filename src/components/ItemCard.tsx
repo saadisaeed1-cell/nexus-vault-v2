@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useCurrency } from "@/components/providers/CurrencyProvider";
 
 const SERVICE_COLOR: Record<string, string> = {
   "youtube-premium": "from-red-800 to-red-950",
@@ -100,6 +101,7 @@ export function ItemCard({
   isAndroidOnly = false,
 }: ItemCardProps) {
   const router = useRouter();
+  const { formatPrice } = useCurrency();
 
   const gradient = isService
     ? (SERVICE_COLOR[slug] ?? "from-slate-700/60 to-slate-900")
@@ -111,15 +113,9 @@ export function ItemCard({
 
   const glowColor = accentColor ?? (isService ? "rgba(59,130,246,0.25)" : "rgba(34,197,94,0.2)");
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    }).format(price);
-  };
-
-  const displayPrice = fromPrice != null ? formatPrice(fromPrice) : null;
+  const displayPrice = fromPrice != null
+    ? formatPrice(fromPrice, fromPriceEur)
+    : null;
 
   return (
     <div

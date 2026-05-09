@@ -37,6 +37,10 @@ body {
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   overflow-x: hidden;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 /* Hide scrollbar on publisher bar */
@@ -136,14 +140,7 @@ body {
   animation: fadeIn 0.22s ease-out both;
 }
 
-/* Safe-area insets */
-body {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
-}
-
+/* Sticky navbar respects the notch */
 nav.sticky {
   padding-top: max(0px, env(safe-area-inset-top));
 }
@@ -165,6 +162,11 @@ nav.sticky {
 }
 .admin-input::placeholder {
   color: #334155;
+}
+.admin-input option,
+.admin-input optgroup {
+  background: #0d0d18;
+  color: #f1f5f9;
 }
 .admin-label {
   display: block;
