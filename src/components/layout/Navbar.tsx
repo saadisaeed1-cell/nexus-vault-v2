@@ -2,27 +2,25 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Crown, Menu, X, User, LogOut, Shield } from "lucide-react";
+import { Crown, Menu, X, User, LogOut, Shield, ShoppingCart, ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 export function Navbar() {
   const { data: session, status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const isAdmin = session?.user?.isAdmin;
-  const isMember = session?.user?.isMember;
+  const isAdmin = (session?.user as { isAdmin?: boolean })?.isAdmin;
+  const isMember = (session?.user as { isMember?: boolean })?.isMember;
 
   return (
     <nav className="sticky top-0 z-50 bg-[#08080e]/80 backdrop-blur-xl border-b border-[#1a2234]">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <Crown className="w-6 h-6 text-[#39FF14]" />
             <span className="font-bold text-lg">Nexus Vault</span>
           </Link>
 
-          {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-6">
             <Link href="/shop" className="text-sm text-slate-400 hover:text-white transition-colors">
               Shop
@@ -32,6 +30,9 @@ export function Navbar() {
             </Link>
             <Link href="/reviews" className="text-sm text-slate-400 hover:text-white transition-colors">
               Reviews
+            </Link>
+            <Link href="/how-it-works" className="text-sm text-slate-400 hover:text-white transition-colors">
+              How It Works
             </Link>
             
             {isAdmin && (
@@ -45,7 +46,6 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
             {status === "loading" ? (
               <div className="w-8 h-8 rounded-full bg-slate-800 animate-pulse" />
@@ -55,8 +55,19 @@ export function Navbar() {
                   href="/profile" 
                   className="flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors"
                 >
-                  <User className="w-4 h-4" />
-                  {session.user.name || session.user.email}
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500/20 to-blue-500/20 flex items-center justify-center">
+                    <span className="text-xs font-bold">
+                      {session.user.name?.charAt(0) || session.user.email?.charAt(0) || "?"}
+                    </span>
+                  </div>
+                  <span className="hidden lg:inline">
+                    {session.user.name || session.user.email}
+                  </span>
+                  {isMember && (
+                    <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">
+                      MEMBER
+                    </span>
+                  )}
                 </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
@@ -84,7 +95,6 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             className="md:hidden p-2 text-slate-400"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -93,7 +103,6 @@ export function Navbar() {
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-[#1a2234]">
             <div className="flex flex-col gap-2">
@@ -117,6 +126,13 @@ export function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Reviews
+              </Link>
+              <Link 
+                href="/how-it-works" 
+                className="px-4 py-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                How It Works
               </Link>
               
               {isAdmin && (

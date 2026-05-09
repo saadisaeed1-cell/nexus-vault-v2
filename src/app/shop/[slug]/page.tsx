@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ArrowLeft, ShoppingCart } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Crown, CheckCircle2 } from "lucide-react";
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ interface PageProps {
 export default async function GamePage({ params }: PageProps) {
   const { slug } = await params;
   const session = await auth();
-  const isMember = session?.user?.isMember ?? false;
+  const isMember = (session?.user as { isMember?: boolean })?.isMember ?? false;
 
   let game: any = null;
 
@@ -26,6 +26,7 @@ export default async function GamePage({ params }: PageProps) {
           where: { isActive: true },
           orderBy: { retailPrice: "asc" },
         },
+        pub: true,
       },
     });
   } catch (error) {
@@ -36,20 +37,25 @@ export default async function GamePage({ params }: PageProps) {
     notFound();
   }
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(price);
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      {/* Back Link */}
+    <div className="max-w-7xl mx-auto px-4 py-8">
       <Link
         href="/shop"
-        className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-8"
+        className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Shop
       </Link>
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row gap-8 mb-12">
-        <div className="w-full md:w-48 h-48 rounded-2xl overflow-hidden bg-slate-800 flex-shrink-0">
+      <div className="flex flex-col lg:flex-row gap-8 mb-12">
+        <div className="w-full lg:w-64 h-64 rounded-2xl overflow-hidden bg-slate-800 flex-shrink-0">
           {game.imageUrl ? (
             <img
               src={game.imageUrl}
@@ -58,7 +64,7 @@ export default async function GamePage({ params }: PageProps) {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-slate-600">
-              <span className="text-5xl font-bold">{game.name.charAt(0)}</span>
+              <span className="text-6xl font-bold">{game.name.charAt(0)}</span>
             </div>
           )}
         </div>
@@ -68,72 +74,142 @@ export default async function GamePage({ params }: PageProps) {
           {game.description && (
             <p className="text-slate-400 mb-6">{game.description}</p>
           )}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3">
             <span className="px-3 py-1 bg-slate-800 rounded-full text-sm text-slate-400">
-              {game.category === "GAME" ? "Game" : "Service"}
+              {game.category === "GAME" ? "🎮 Game" : "💻 Service"}
             </span>
             <span className="px-3 py-1 bg-slate-800 rounded-full text-sm text-slate-400">
               {game.region}
             </span>
+            {game.isAndroidOnly && (
+              <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm font-bold">
+                Android Only
+              </span>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Products */}
-      <div>
-        <h2 className="text-2xl font-bold mb-6">Available Items</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {game.products.length > 0 ? (
-            game.products.map((product: any) => (
-              <div
-                key={product.id}
-                className="card-dark p-6 flex flex-col"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="font-bold text-lg">{product.name}</h3>
-                    <p className="text-sm text-slate-500">{product.amount}</p>
-                  </div>
-                  {product.badge && (
-                    <span className="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs font-bold rounded">
-                      {product.badge}
-                    </span>
-                  )}
-                </div>
-
-                <div className="mt-auto">
-                  <div className="flex items-end justify-between mb-4">
-                    <div>
-                      <p className="text-sm text-slate-500">Retail</p>
-                      <p className="text-lg font-bold text-slate-400">
-                        ${product.retailPrice.toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-slate-500">Member</p>
-                      <p className="text-2xl font-black price-member">
-                        ${product.memberPrice.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <Link
-                    href={`/checkout/${product.id}`}
-                    className="w-full flex items-center justify-center gap-2 bg-[#39FF14] text-black font-bold py-3 rounded-xl hover:bg-[#32e612] transition-colors"
-                  >
-                    <ShoppingCart className="w-4 h-4" />
-                    {isMember ? "Buy Now" : "Buy at Retail"}
-                  </Link>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="col-span-full text-center py-12 text-slate-600">
-              No items available for this game.
+      <div className="grid lg:grid-cols-2 gap-8">
+        <div className="card-dark rounded-2xl overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#1e293b]">
+            <div className="w-9 h-9 rounded-lg bg-slate-700/50 flex items-center justify-center text-base shrink-0">
+              😐
             </div>
-          )}
+            <div>
+              <p className="font-bold text-slate-300 text-sm">Standard Access</p>
+              <p className="text-[11px] text-slate-500">Retail pricing — no discount</p>
+            </div>
+          </div>
+
+          <div className="px-5">
+            <div className="grid grid-cols-[1fr_6rem] py-3 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+              <span>Product</span>
+              <span className="text-right">Price</span>
+            </div>
+
+            <div className="pb-4">
+              {game.products.map((product: any, i: number) => (
+                <div
+                  key={product.id}
+                  className="grid grid-cols-[1fr_6rem] items-center h-[52px] border-b border-[#1e293b] last:border-0"
+                >
+                  <span className="text-sm text-slate-400 truncate pr-2">
+                    {product.name} · {product.amount}
+                  </span>
+                  <span className="text-sm font-semibold text-slate-300 tabular-nums text-right">
+                    {formatPrice(product.retailPrice)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
+
+        <div className="relative">
+          <div className="absolute -top-4 inset-x-0 flex justify-center z-20 pointer-events-none">
+            <span className="vip-badge px-5 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5 tracking-wider whitespace-nowrap shadow-lg">
+              <Crown className="w-3 h-3 fill-current" /> PLATINUM MEMBER
+            </span>
+          </div>
+
+          <div className="rounded-2xl border-2 border-green-500/50 overflow-hidden bg-gradient-to-b from-green-950/40 to-transparent neon-border h-full">
+            <div className="flex items-center gap-3 px-5 pt-8 pb-4 border-b border-green-900/30">
+              <div className="w-9 h-9 rounded-lg bg-yellow-400/10 flex items-center justify-center shrink-0">
+                <Crown className="w-5 h-5 text-yellow-400 fill-yellow-400/30" />
+              </div>
+              <div>
+                <p className="font-bold text-white text-sm">Inner Circle Access</p>
+                <p className="text-[11px] text-green-400 font-medium">At-cost — 2% fee only</p>
+              </div>
+            </div>
+
+            <div className="px-5">
+              <div className="grid grid-cols-[1fr_6rem] py-3 text-[10px] font-bold uppercase tracking-widest">
+                <span className="text-slate-600">Product</span>
+                <span className="text-green-800 text-right">Member</span>
+              </div>
+
+              <div className="pb-4">
+                {game.products.map((product: any) => {
+                  const savings = product.retailPrice - product.memberPrice;
+                  return (
+                    <div
+                      key={product.id}
+                      className="grid grid-cols-[1fr_6rem] items-center h-[52px] border-b border-green-900/30 last:border-0"
+                    >
+                      <span className="text-sm text-slate-300 truncate pr-2">
+                        {product.name} · {product.amount}
+                      </span>
+                      <div className="text-right">
+                        <div className="font-black text-green-400 tabular-nums text-sm">
+                          {formatPrice(product.memberPrice)}
+                        </div>
+                        {savings > 0.01 && (
+                          <div className="text-[10px] text-green-600 tabular-nums font-semibold">
+                            save {formatPrice(savings)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <p className="px-5 pb-4 text-[11px] text-green-700 text-center font-medium tracking-wide">
+              Zero markup · Priority processing · 24/7 concierge
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
+        {isMember ? (
+          <Link
+            href={`/checkout?game=${game.slug}`}
+            className="cta-pulse inline-flex items-center justify-center gap-2 bg-[#39FF14] text-black font-black px-8 py-4 rounded-xl text-lg"
+          >
+            <ShoppingCart className="w-5 h-5" />
+            Buy at Member Price
+          </Link>
+        ) : (
+          <>
+            <Link
+              href="/join"
+              className="cta-pulse inline-flex items-center justify-center gap-2 bg-[#39FF14] text-black font-black px-8 py-4 rounded-xl text-lg"
+            >
+              <Crown className="w-5 h-5" />
+              Join to Save
+            </Link>
+            <Link
+              href={`/checkout?game=${game.slug}`}
+              className="inline-flex items-center justify-center gap-2 border border-slate-700 text-white px-8 py-4 rounded-xl text-lg hover:bg-white/5 transition-colors"
+            >
+              Buy at Retail
+            </Link>
+          </>
+        )}
       </div>
     </div>
   );

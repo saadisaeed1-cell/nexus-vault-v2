@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Crown, ArrowRight, Star, TrendingDown, Shield, Hexagon, Globe, Users, PlayCircle } from "lucide-react";
+import { HeroCTA } from "@/components/HeroCTA";
+import { ItemCard } from "@/components/ItemCard";
+import { ArrowRight, Globe, Crown, PlayCircle } from "lucide-react";
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const session = await auth();
-  const isMember = session?.user?.isMember ?? false;
+  const isMember = (session?.user as { isMember?: boolean })?.isMember ?? false;
 
-  // Default values if database is not available
   let featuredGames: any[] = [];
   let services: any[] = [];
   let settings = { memberLimit: 200, memberOverride: null as number | null };
@@ -25,7 +26,6 @@ export default async function HomePage() {
             where: { isActive: true },
             orderBy: { retailPrice: "asc" },
             take: 1,
-            select: { memberPrice: true, retailPrice: true, eurRetailPrice: true, eurMemberPrice: true },
           },
         },
         orderBy: { name: "asc" },
@@ -38,7 +38,6 @@ export default async function HomePage() {
             where: { isActive: true },
             orderBy: { retailPrice: "asc" },
             take: 1,
-            select: { memberPrice: true, retailPrice: true, eurRetailPrice: true, eurMemberPrice: true },
           },
         },
         orderBy: { name: "asc" },
@@ -59,106 +58,8 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero */}
-      <section className="relative overflow-hidden pt-20 pb-32">
-        <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none"
-          style={{
-            backgroundImage:
-              "linear-gradient(#22c55e 1px, transparent 1px), linear-gradient(90deg, #22c55e 1px, transparent 1px)",
-            backgroundSize: "60px 60px",
-          }}
-        />
-        <div className="absolute top-20 left-1/4 w-80 h-80 bg-green-500/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-40 right-1/4 w-56 h-56 bg-emerald-500/[0.03] rounded-full blur-3xl pointer-events-none" />
+      <HeroCTA isMember={isMember} availableSlots={availableSlots} memberLimit={settings.memberLimit} />
 
-        <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
-          <div className="inline-flex items-center gap-2 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold px-4 py-1.5 rounded-full mb-8 tracking-widest uppercase">
-            <Hexagon className="w-3.5 h-3.5 fill-green-500/20" strokeWidth={2} />
-            Private Members Club
-          </div>
-
-          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-6 leading-[0.9]">
-            The End of
-            <br />
-            <span className="gradient-text">Retail Prices.</span>
-          </h1>
-
-          <p className="text-slate-400 text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
-            Join the inner circle. Access{" "}
-            <strong className="text-white">100% at-cost pricing</strong> for V-Bucks, COD
-            Points, Netflix, Spotify and more. A private membership for those who play more
-            and pay less.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            {isMember ? (
-              <Link
-                href="/shop"
-                className="cta-pulse inline-flex items-center gap-2 bg-[#39FF14] text-black font-black px-8 py-4 rounded-xl text-lg"
-              >
-                Browse Shop
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/join"
-                  className="cta-pulse inline-flex items-center gap-2 bg-[#39FF14] text-black font-black px-8 py-4 rounded-xl text-lg"
-                >
-                  Join Nexus
-                  <Crown className="w-5 h-5" />
-                </Link>
-                <Link
-                  href="/shop"
-                  className="inline-flex items-center gap-2 border border-slate-700 text-white px-8 py-4 rounded-xl text-lg hover:bg-white/5 transition-colors"
-                >
-                  Browse Shop
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* Trust signals */}
-          {!isMember && (
-            <>
-              <div className="mt-5 flex items-center justify-center gap-3 text-[11px] text-slate-600 overflow-x-auto whitespace-nowrap px-4 scrollbar-none">
-                <span className="flex items-center gap-1"><Shield className="w-3 h-3 text-green-700" /> Secure Stripe</span>
-                <span className="text-slate-700">·</span>
-                <span className="flex items-center gap-1"><Star className="w-3 h-3 text-yellow-600 fill-yellow-600" /> 4.9/5 Rating</span>
-                <span className="text-slate-700">·</span>
-                <span>Cancel anytime</span>
-              </div>
-
-              <div className="mt-5 inline-flex items-center gap-2 bg-black/40 border border-amber-500/30 text-amber-400 text-xs font-bold px-5 py-2.5 rounded-full">
-                <Users className="w-3.5 h-3.5" />
-                Private Slots Available:{" "}
-                <span className={availableSlots <= 20 ? "text-red-400" : "text-green-400"}>
-                  {availableSlots}
-                </span>
-                <span className="text-slate-600">/ {settings.memberLimit}</span>
-              </div>
-            </>
-          )}
-
-          <div className="mt-12 flex items-center justify-center gap-6 text-sm text-slate-500 overflow-x-auto whitespace-nowrap px-4 scrollbar-none">
-            <span className="flex items-center gap-1.5">
-              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-              4.9/5 from 2,400+ orders
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Shield className="w-4 h-4 text-green-400" />
-              Secure Stripe Payments
-            </span>
-            <span className="flex items-center gap-1.5">
-              <TrendingDown className="w-4 h-4 text-blue-400" />
-              Up to 79% below retail
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Games */}
       <section className="max-w-7xl mx-auto px-4 mb-16">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
           <div>
@@ -167,7 +68,7 @@ export default async function HomePage() {
           </div>
           <Link
             href="/shop"
-            className="flex items-center gap-1.5 text-green-400 hover:text-green-300 text-sm font-semibold transition-colors self-start sm:self-auto"
+            className="flex items-center gap-1.5 text-green-400 hover:text-green-300 text-sm font-semibold transition-colors"
           >
             View All <ArrowRight className="w-4 h-4" />
           </Link>
@@ -179,13 +80,15 @@ export default async function HomePage() {
               const cheapest = game.products[0];
               const fromPrice = cheapest ? (isMember ? cheapest.memberPrice : cheapest.retailPrice) : null;
               return (
-                <GameCard
+                <ItemCard
                   key={game.id}
                   slug={game.slug}
                   name={game.name}
                   imageUrl={game.imageUrl}
                   fromPrice={fromPrice}
                   isMember={isMember}
+                  packCount={game.products.length}
+                  isAndroidOnly={game.isAndroidOnly}
                 />
               );
             })
@@ -197,7 +100,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Services */}
       <section className="max-w-7xl mx-auto px-4 mb-24">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-4">
           <div>
@@ -224,13 +126,14 @@ export default async function HomePage() {
               const cheapest = svc.products[0];
               const fromPrice = cheapest ? (isMember ? cheapest.memberPrice : cheapest.retailPrice) : null;
               return (
-                <GameCard
+                <ItemCard
                   key={svc.id}
                   slug={svc.slug}
                   name={svc.name}
                   imageUrl={svc.imageUrl}
                   fromPrice={fromPrice}
                   isMember={isMember}
+                  packCount={svc.products.length}
                   isService
                 />
               );
@@ -243,7 +146,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* CTA Banner */}
       <section className="max-w-4xl mx-auto px-4 mb-24">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-900/40 to-green-800/20 border border-green-500/30 p-10 text-center">
           <div
@@ -258,7 +160,7 @@ export default async function HomePage() {
           </p>
           <Link
             href="/how-it-works"
-            className="cta-pulse relative z-10 inline-flex items-center gap-2 bg-green-500 hover:bg-green-400 active:bg-green-600 active:scale-[0.97] text-black font-black px-8 py-3 rounded-xl transition-all text-lg min-h-[52px]"
+            className="cta-pulse relative z-10 inline-flex items-center gap-2 bg-green-500 hover:bg-green-400 active:bg-green-600 active:scale-[0.97] text-black font-black px-8 py-3 rounded-xl transition-all text-lg"
           >
             <PlayCircle className="w-5 h-5" />
             How It Works
@@ -266,49 +168,5 @@ export default async function HomePage() {
         </div>
       </section>
     </div>
-  );
-}
-
-// Game Card Component
-function GameCard({
-  slug,
-  name,
-  imageUrl,
-  fromPrice,
-  isMember,
-  isService = false,
-}: {
-  slug: string;
-  name: string;
-  imageUrl: string | null;
-  fromPrice: number | null;
-  isMember: boolean;
-  isService?: boolean;
-}) {
-  return (
-    <Link
-      href={`/shop/${slug}`}
-      className="group card-dark p-3 flex flex-col transition-all duration-200"
-    >
-      <div className={`relative ${isService ? 'w-12 h-12' : 'aspect-square'} rounded-lg overflow-hidden bg-slate-800 mb-3`}>
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-slate-600">
-            <span className="text-2xl font-bold">{name.charAt(0)}</span>
-          </div>
-        )}
-      </div>
-      <h3 className="font-semibold text-sm mb-1 truncate">{name}</h3>
-      {fromPrice !== null && (
-        <p className={`text-sm font-bold ${isMember ? 'price-member' : 'text-slate-400'}`}>
-          From ${fromPrice.toFixed(2)}
-        </p>
-      )}
-    </Link>
   );
 }
